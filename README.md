@@ -55,6 +55,4 @@ This project is licensed under the [MIT License](LICENSE). You are free to use, 
 
 If you have any questions, suggestions, or issues related to the simulation or the code, feel free to contact us at [email address] or create an issue on the GitHub repository. We welcome any feedback and contributions to improve the simulation.
 
----
 
-*Note: The images used in the README are for illustrative purposes only and may not represent the actual simulation output.*
