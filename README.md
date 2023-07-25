@@ -8,7 +8,8 @@ The Wave Function is a MATLAB simulation that models the propagation of waves in
 
 The simulation is based on solving the wave equation, which describes how waves propagate through a medium. The wave equation is given by:
 
-![Wave Equation](images/wave_equation.png)
+![Wave Function](simulation_video.gif)
+
 
 where `u(x, y, t)` represents the wave function at position `(x, y)` and time `t`, `c` is the wave speed, and `d^2/dx^2` and `d^2/dy^2` are second derivatives with respect to `x` and `y`, respectively.
 
