@@ -1,0 +1,302 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>RungeKutta</title><meta name="generator" content="MATLAB 9.14"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2023-07-24"><meta name="DC.source" content="RungeKutta.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Case 2</a></li><li><a href="#3">functions to be called</a></li></ul></div><pre class="codeinput"><span class="comment">% Courant&#8211;Friedrichs&#8211;Lewy Number</span>
+CFL = 0.2;
+<span class="comment">% Total simulation time</span>
+T = 2.5;
+<span class="comment">% Plot time</span>
+tplot = 0.01;
+
+<span class="comment">% Output video settings</span>
+videoFileName = <span class="string">'simulation_video.mp4'</span>;
+frameRate = 30; <span class="comment">% Adjust the frame rate as desired</span>
+</pre><h2 id="2">Case 2</h2><pre class="codeinput">N = 256;
+L = 1;
+c = 1;
+dx = L/N;
+dy = L/N;
+x = dx*(-N/2:N/2);
+y = dy*(-N/2:N/2);
+[X, Y] = meshgrid(x, y);
+xc = 0.15;
+yc = -0.4;
+R = 0.05;
+r = sqrt((X-xc).^2 + (Y-yc).^2);
+<span class="comment">% Initial condition</span>
+u = zeros(size(X));
+u(r&lt;R) = 0.5*(1 + cos(pi*r(r&lt;R)/R));
+v = zeros(size(X));
+<span class="comment">% set index for inner cells</span>
+i = 2:N;
+j = 2:N;
+<span class="comment">% set handle for the right hand side of the pde</span>
+d2udt2 = @(u, v) wave(u, v, i, j, dx*dx, dy*dy, c*c);
+
+<span class="comment">% initialize the plot</span>
+fig = figure(<span class="string">'Color'</span>, <span class="string">'w'</span>, <span class="string">'Position'</span>, [2360 90 1271 847]);
+waveplot = surf(X, Y, u, <span class="string">'EdgeAlpha'</span>, 0.3);
+axis([-0.5,0.5,-0.5,0.5,-0.5,1])
+xlabel(<span class="string">"$x$"</span>, <span class="string">'Interpreter'</span>, <span class="string">'latex'</span>, <span class="string">'FontSize'</span>, 20)
+ylabel(<span class="string">"$y$"</span>, <span class="string">'Interpreter'</span>, <span class="string">'latex'</span>, <span class="string">'FontSize'</span>, 20)
+zlabel(<span class="string">"$u$"</span>, <span class="string">'Interpreter'</span>, <span class="string">'latex'</span>, <span class="string">'FontSize'</span>, 20);
+ttle = title(<span class="string">"$u(x,y,t = "</span> + 0 + <span class="string">")$"</span>, <span class="string">'Interpreter'</span>, <span class="string">'latex'</span>, <span class="string">'FontSize'</span>, 20);
+ax = gca; ax.TickLabelInterpreter = <span class="string">"latex"</span>; ax.FontSize = 20;
+
+<span class="comment">% Create VideoWriter object</span>
+vWriter = VideoWriter(videoFileName, <span class="string">'MPEG-4'</span>);
+vWriter.FrameRate = frameRate;
+open(vWriter);
+
+<span class="comment">% Compute dt that will make the solution stable</span>
+nt = ceil(tplot/(CFL*(dx+dy)/c));
+dt = tplot/nt;
+U_case2 = Simulate(d2udt2, u, v, dt, T, @(u, t) plotfun(u, t, waveplot, ttle), nt, vWriter);
+
+<span class="comment">% Close VideoWriter object</span>
+close(vWriter);
+</pre><img vspace="5" hspace="5" src="RungeKutta_01.png" alt=""> <h2 id="3">functions to be called</h2><pre class="codeinput"><span class="keyword">function</span> [U, V] = Simulate(d2udt2, u0, v0, dt, T, plthndle, nt, vWriter)
+    t = 0;
+    u = u0;
+    v = v0;
+    U = u;
+    V = v;
+    ntcount = 0;
+    <span class="keyword">while</span> (t &lt; T)
+        [u, v] = rk4(d2udt2, u, v, dt);
+        U = cat(3, U, u);
+        V = cat(3, V, v);
+        t = t + dt;
+        plthndle(u, t);
+        ntcount = ntcount + 1;
+        <span class="keyword">if</span>(mod(ntcount, nt) == 0)
+            saveFrameToVideo(vWriter, gcf);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> saveFrameToVideo(vWriter, fig)
+    frame = getframe(fig);
+    writeVideo(vWriter, frame);
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> plotfun(u, t, plt, txt)
+    plt.ZData = u;
+    txt.String = <span class="string">"$u(x,y,t = "</span> + t + <span class="string">")$"</span>;
+    drawnow;
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> [du, dv] = wave(u, v, i, j, dx2, dy2, c2)
+    du = zeros(size(u));
+    dv = zeros(size(v));
+    du(i, j) = v(i, j);
+    d2udx2 = (u(i-1, j) - 2*u(i, j) + u(i+1, j))/dx2;
+    d2udy2 = (u(i, j-1) - 2*u(i, j) + u(i, j+1))/dy2;
+    dv(i, j) = c2*(d2udx2 + d2udy2);
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> [u, v] = rk4(dydt, u, v, dt)
+    <span class="keyword">function</span> [ku, kv] = Kfun(u, v)
+        [du, dv] = dydt(u, v);
+        ku = du*dt; kv = dv*dt;
+    <span class="keyword">end</span>
+    <span class="comment">% computing k1</span>
+    [k1u, k1v] = Kfun(u, v);
+    <span class="comment">% computing k2</span>
+    [k2u, k2v] = Kfun(u + 0.5*k1u, v + 0.5*k1v);
+    <span class="comment">% computing k3</span>
+    [k3u, k3v] = Kfun(u + 0.5*k2u, v + 0.5*k2v);
+    <span class="comment">% computing k4</span>
+    [k4u, k4v] = Kfun(u + k3u, v + k3v);
+    <span class="comment">% updating u and v</span>
+    u = u + (k1u + 2*k2u + 2*k3u + k4u)/6;
+    v = v + (k1v + 2*k2v + 2*k3v + k4v)/6;
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Warning: The video's width and height has been padded to be a multiple of two as
+required by the H.264 codec. 
+</pre><img vspace="5" hspace="5" src="RungeKutta_02.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2023a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% Courant–Friedrichs–Lewy Number
+CFL = 0.2;
+% Total simulation time
+T = 2.5;
+% Plot time
+tplot = 0.01;
+
+% Output video settings
+videoFileName = 'simulation_video.mp4';
+frameRate = 30; % Adjust the frame rate as desired
+
+%% Case 2
+N = 256;
+L = 1;
+c = 1;
+dx = L/N;
+dy = L/N;
+x = dx*(-N/2:N/2);
+y = dy*(-N/2:N/2);
+[X, Y] = meshgrid(x, y);
+xc = 0.15; 
+yc = -0.4;
+R = 0.05;
+r = sqrt((X-xc).^2 + (Y-yc).^2);
+% Initial condition
+u = zeros(size(X));
+u(r<R) = 0.5*(1 + cos(pi*r(r<R)/R));
+v = zeros(size(X));
+% set index for inner cells
+i = 2:N; 
+j = 2:N;
+% set handle for the right hand side of the pde
+d2udt2 = @(u, v) wave(u, v, i, j, dx*dx, dy*dy, c*c);
+
+% initialize the plot
+fig = figure('Color', 'w', 'Position', [2360 90 1271 847]);
+waveplot = surf(X, Y, u, 'EdgeAlpha', 0.3);
+axis([-0.5,0.5,-0.5,0.5,-0.5,1])
+xlabel("$x$", 'Interpreter', 'latex', 'FontSize', 20)
+ylabel("$y$", 'Interpreter', 'latex', 'FontSize', 20)
+zlabel("$u$", 'Interpreter', 'latex', 'FontSize', 20);
+ttle = title("$u(x,y,t = " + 0 + ")$", 'Interpreter', 'latex', 'FontSize', 20);
+ax = gca; ax.TickLabelInterpreter = "latex"; ax.FontSize = 20;
+
+% Create VideoWriter object
+vWriter = VideoWriter(videoFileName, 'MPEG-4');
+vWriter.FrameRate = frameRate;
+open(vWriter);
+
+% Compute dt that will make the solution stable
+nt = ceil(tplot/(CFL*(dx+dy)/c));
+dt = tplot/nt;
+U_case2 = Simulate(d2udt2, u, v, dt, T, @(u, t) plotfun(u, t, waveplot, ttle), nt, vWriter);
+
+% Close VideoWriter object
+close(vWriter);
+
+%% functions to be called
+function [U, V] = Simulate(d2udt2, u0, v0, dt, T, plthndle, nt, vWriter)
+    t = 0; 
+    u = u0; 
+    v = v0;
+    U = u;
+    V = v;
+    ntcount = 0;
+    while (t < T)
+        [u, v] = rk4(d2udt2, u, v, dt);
+        U = cat(3, U, u);
+        V = cat(3, V, v);
+        t = t + dt;
+        plthndle(u, t);
+        ntcount = ntcount + 1;
+        if(mod(ntcount, nt) == 0)
+            saveFrameToVideo(vWriter, gcf);
+        end
+    end
+end
+
+function saveFrameToVideo(vWriter, fig)
+    frame = getframe(fig);
+    writeVideo(vWriter, frame);
+end
+
+function plotfun(u, t, plt, txt)
+    plt.ZData = u; 
+    txt.String = "$u(x,y,t = " + t + ")$";
+    drawnow;
+end
+
+function [du, dv] = wave(u, v, i, j, dx2, dy2, c2)
+    du = zeros(size(u));
+    dv = zeros(size(v));
+    du(i, j) = v(i, j);
+    d2udx2 = (u(i-1, j) - 2*u(i, j) + u(i+1, j))/dx2;
+    d2udy2 = (u(i, j-1) - 2*u(i, j) + u(i, j+1))/dy2;
+    dv(i, j) = c2*(d2udx2 + d2udy2);
+end
+
+function [u, v] = rk4(dydt, u, v, dt)
+    function [ku, kv] = Kfun(u, v)
+        [du, dv] = dydt(u, v); 
+        ku = du*dt; kv = dv*dt;
+    end
+    % computing k1
+    [k1u, k1v] = Kfun(u, v); 
+    % computing k2
+    [k2u, k2v] = Kfun(u + 0.5*k1u, v + 0.5*k1v); 
+    % computing k3
+    [k3u, k3v] = Kfun(u + 0.5*k2u, v + 0.5*k2v); 
+    % computing k4
+    [k4u, k4v] = Kfun(u + k3u, v + k3v); 
+    % updating u and v
+    u = u + (k1u + 2*k2u + 2*k3u + k4u)/6;
+    v = v + (k1v + 2*k2v + 2*k3v + k4v)/6;
+end
+
+##### SOURCE END #####
+--></body></html>
